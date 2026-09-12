@@ -1,458 +1,186 @@
-const dice = [
-    document.getElementById("dice1"),
-    document.getElementById("dice2"),
-    document.getElementById("dice3")
-];
+const scoreEl = document.getElementById("score");
+const streakEl = document.getElementById("streak");
+const livesEl = document.getElementById("lives");
+const bestEl = document.getElementById("best");
+const roundEl = document.getElementById("round");
+const timerEl = document.getElementById("timer");
+const totalEl = document.getElementById("total");
+const guessEl = document.getElementById("guess");
+const statusEl = document.getElementById("status");
+const messageEl = document.getElementById("message");
+const rollBtn = document.getElementById("rollBtn");
+const numberGrid = document.getElementById("numberGrid");
+const historyList = document.getElementById("historyList");
 
-const totalElement = document.getElementById("total");
-const sizeElement = document.getElementById("size");
-const parityElement = document.getElementById("parity");
-const timerElement = document.getElementById("timer");
-const roundElement = document.getElementById("round");
-const modeElement = document.getElementById("mode");
-
-const rollButton = document.getElementById("rollButton");
-const resetButton = document.getElementById("resetButton");
-const autoButton = document.getElementById("autoButton");
-const clearButton = document.getElementById("clearButton");
-
-const historyTable = document.getElementById("historyTable");
-const statusElement = document.getElementById("status");
-
-let diceValues = [1, 1, 1];
+let score = 0;
+let streak = 0;
+let lives = 3;
+let best = Number(localStorage.getItem("diceArenaBest") || 0);
 let round = 1;
-let timer = 30;
-let autoRoll = false;
+let guess = null;
+let timeLeft = 30;
+let locked = false;
+let history = [];
 
+bestEl.textContent = best;
 
-/* -------------------------
-   CREATE DICE FACE
-------------------------- */
+const facePips = {
+  1:["p1"], 2:["p2","p3"], 3:["p2","p1","p3"],
+  4:["p2","p4","p5","p3"], 5:["p2","p4","p1","p5","p3"],
+  6:["p2","p4","p6","p7","p5","p3"]
+};
 
-function createFace(number) {
-
-    const positions = {
-
-        1: [4],
-
-        2: [0, 8],
-
-        3: [0, 4, 8],
-
-        4: [0, 2, 6, 8],
-
-        5: [0, 2, 4, 6, 8],
-
-        6: [0, 2, 3, 5, 6, 8]
-
-    };
-
-    let html = "";
-
-    for (let i = 0; i < 9; i++) {
-
-        if (positions[number].includes(i)) {
-
-            html += '<span class="dot"></span>';
-
-        } else {
-
-            html += '<span></span>';
-
-        }
-
-    }
-
-    return html;
+function showDie(el, value){
+  el.innerHTML = "";
+  (facePips[value] || []).forEach(cls=>{
+    const pip=document.createElement("span");
+    pip.className=`pip ${cls}`;
+    el.appendChild(pip);
+  });
 }
 
+function buildNumbers(){
+  for(let n=3;n<=18;n++){
+    const btn=document.createElement("button");
+    btn.className="num";
+    btn.textContent=n;
+    btn.addEventListener("click",()=>selectGuess(n));
+    numberGrid.appendChild(btn);
+  }
+}
+buildNumbers();
 
-/* -------------------------
-   UPDATE VISIBLE DICE
-------------------------- */
-
-function updateVisibleDice() {
-
-    dice.forEach((die, index) => {
-
-        const number = diceValues[index];
-
-        const front =
-            die.querySelector(".front");
-
-        /*
-            IMPORTANT:
-            Visible front face now shows
-            the actual random number.
-        */
-
-        front.innerHTML =
-            createFace(number);
-
-    });
-
+function selectGuess(n){
+  if(locked) return;
+  guess=n;
+  guessEl.textContent=n;
+  document.querySelectorAll(".num").forEach(b=>b.classList.toggle("selected",Number(b.textContent)===n));
+  statusEl.textContent="Guess locked in — roll!";
 }
 
-
-/* -------------------------
-   RANDOM NUMBER
-------------------------- */
-
-function randomDice() {
-
-    return Math.floor(Math.random() * 6) + 1;
-
+function updateStats(){
+  scoreEl.textContent=score;
+  streakEl.textContent=streak;
+  livesEl.textContent=lives;
+  bestEl.textContent=best;
 }
 
-
-/* -------------------------
-   UPDATE RESULT
-------------------------- */
-
-function updateGame() {
-
-    const total =
-        diceValues[0] +
-        diceValues[1] +
-        diceValues[2];
-
-
-    totalElement.textContent = total;
-
-
-    /* SMALL / BIG */
-
-    if (total <= 10) {
-
-        sizeElement.textContent = "SMALL";
-        sizeElement.style.color = "#1688e8";
-
-    } else {
-
-        sizeElement.textContent = "BIG";
-        sizeElement.style.color = "#ed8919";
-
-    }
-
-
-    /* EVEN / ODD */
-
-    if (total % 2 === 0) {
-
-        parityElement.textContent = "EVEN";
-        parityElement.style.color = "#0ca36d";
-
-    } else {
-
-        parityElement.textContent = "ODD";
-        parityElement.style.color = "#df4665";
-
-    }
-
-
-    roundElement.textContent =
-        "#" + round;
-
-    modeElement.textContent =
-        autoRoll ? "AUTO" : "MANUAL";
-
-
-    return total;
+function addHistory(g,total,points,correct){
+  history.unshift({round,guess:g,total,points,correct});
+  history=history.slice(0,12);
+  historyList.innerHTML=history.map(h=>`
+    <div class="row">
+      <span>#${h.round}</span>
+      <span>${h.guess}</span>
+      <span class="${h.correct?"win":"miss"}">${h.total} ${h.correct?"✓":"✕"}</span>
+      <span>${h.points>0?"+":""}${h.points}</span>
+    </div>`).join("");
 }
 
-
-/* -------------------------
-   ROLL ANIMATION
-------------------------- */
-
-function animateDice() {
-
-    dice.forEach((die) => {
-
-        die.classList.remove("rolling");
-
-        void die.offsetWidth;
-
-        die.classList.add("rolling");
-
-    });
-
+function roll(){
+  if(locked || guess===null) return;
+  locked=true;
+  rollBtn.disabled=true;
+  statusEl.textContent="Rolling…";
+  [1,2,3].forEach(i=>showDie(document.getElementById(`die${i}`),1));
+  let ticks=0;
+  const anim=setInterval(()=>{
+    [1,2,3].forEach(i=>showDie(document.getElementById(`die${i}`),Math.floor(Math.random()*6)+1));
+    if(++ticks>=8){
+      clearInterval(anim);
+      finishRoll();
+    }
+  },90);
 }
 
+function finishRoll(){
+  const values=[1,2,3].map(i=>Math.floor(Math.random()*6)+1);
+  values.forEach((v,i)=>{
+    showDie(document.getElementById(`die${i+1}`),v);
+    document.getElementById(`value${i+1}`).textContent=v;
+  });
+  const total=values.reduce((a,b)=>a+b,0);
+  totalEl.textContent=total;
 
-/* -------------------------
-   ADD HISTORY
-------------------------- */
-
-function addHistory(total) {
-
-    const size =
-        total <= 10
-            ? "SMALL"
-            : "BIG";
-
-    const parity =
-        total % 2 === 0
-            ? "EVEN"
-            : "ODD";
-
-
-    const row =
-        document.createElement("tr");
-
-
-    row.innerHTML = `
-
-        <td>#${round}</td>
-
-        <td>${diceValues[0]}</td>
-
-        <td>${diceValues[1]}</td>
-
-        <td>${diceValues[2]}</td>
-
-        <td>
-            <strong>${total}</strong>
-        </td>
-
-        <td>
-            <span class="badge">
-                ${size}
-            </span>
-        </td>
-
-        <td>
-            <span class="badge">
-                ${parity}
-            </span>
-        </td>
-
-    `;
-
-
-    historyTable.prepend(row);
-
-
-    /* Keep last 15 */
-
-    while (
-        historyTable.children.length > 15
-    ) {
-
-        historyTable.lastElementChild.remove();
-
+  const correct=total===guess;
+  let points=0;
+  if(correct){
+    streak++;
+    points=100;
+    if(streak%2===0) points+=50; // fixed streak bonus, not a multiplier
+    score+=points;
+    if(score>best){
+      best=score;
+      localStorage.setItem("diceArenaBest",best);
     }
+    statusEl.textContent="🎉 Correct guess!";
+    messageEl.innerHTML=`<strong>Nice! +${points} points</strong><span>Streak: ${streak}. Keep guessing to beat your best score.</span>`;
+  }else{
+    streak=0;
+    lives--;
+    statusEl.textContent="❌ Not this time";
+    messageEl.innerHTML=`<strong>The total was ${total}</strong><span>Your guess was ${guess}. One life used. No points were removed.</span>`;
+  }
 
+  addHistory(guess,total,points,correct);
+  updateStats();
+
+  setTimeout(()=>{
+    if(lives<=0){
+      endGame();
+    }else{
+      round++;
+      roundEl.textContent=round;
+      guess=null;
+      guessEl.textContent="—";
+      document.querySelectorAll(".num").forEach(b=>b.classList.remove("selected"));
+      timeLeft=30;
+      timerEl.textContent=timeLeft;
+      locked=false;
+      rollBtn.disabled=false;
+      statusEl.textContent="Make your guess!";
+    }
+  },1100);
 }
 
-
-/* -------------------------
-   MAIN ROLL
-------------------------- */
-
-function rollDice() {
-
-    /*
-        Generate numbers FIRST
-    */
-
-    diceValues = [
-
-        randomDice(),
-        randomDice(),
-        randomDice()
-
-    ];
-
-
-    /*
-        Start animation
-    */
-
-    animateDice();
-
-
-    /*
-        After animation,
-        show exactly those numbers.
-    */
-
-    setTimeout(() => {
-
-        updateVisibleDice();
-
-        const total =
-            updateGame();
-
-
-        addHistory(total);
-
-
-        statusElement.textContent =
-            "Round " +
-            round +
-            " • Dice: " +
-            diceValues.join(" - ") +
-            " • Total: " +
-            total;
-
-
-        round++;
-
-        timer = 30;
-
-        timerElement.textContent = "30";
-
-    }, 650);
-
+function endGame(){
+  locked=true;
+  rollBtn.disabled=true;
+  statusEl.textContent="🏁 Game Over";
+  messageEl.innerHTML=`<strong>Game over!</strong><span>Final score: ${score}. Press Reset Game to play again.</span>`;
 }
 
-
-/* -------------------------
-   MANUAL ROLL
-------------------------- */
-
-rollButton.addEventListener(
-    "click",
-    () => {
-
-        rollDice();
-
-    }
-);
-
-
-/* -------------------------
-   AUTO ROLL
-------------------------- */
-
-autoButton.addEventListener(
-    "click",
-    () => {
-
-        autoRoll = !autoRoll;
-
-
-        if (autoRoll) {
-
-            autoButton.textContent = "ON";
-
-            autoButton.classList.add("active");
-
-            modeElement.textContent = "AUTO";
-
-            statusElement.textContent =
-                "Auto Roll ON • Next roll in 30 seconds";
-
-        } else {
-
-            autoButton.textContent = "OFF";
-
-            autoButton.classList.remove("active");
-
-            modeElement.textContent = "MANUAL";
-
-            statusElement.textContent =
-                "Auto Roll OFF";
-
-        }
-
-    }
-);
-
-
-/* -------------------------
-   30 SECOND TIMER
-------------------------- */
-
-setInterval(() => {
-
-    if (!autoRoll) {
-        return;
-    }
-
-
-    timer--;
-
-    timerElement.textContent = timer;
-
-
-    if (timer <= 0) {
-
-        rollDice();
-
-        timer = 30;
-
-    }
-
-}, 1000);
-
-
-/* -------------------------
-   RESET
-------------------------- */
-
-resetButton.addEventListener(
-    "click",
-    () => {
-
-        diceValues = [1, 1, 1];
-
-        round = 1;
-
-        timer = 30;
-
-        autoRoll = false;
-
-
-        timerElement.textContent = "30";
-
-        roundElement.textContent = "#1";
-
-        modeElement.textContent = "MANUAL";
-
-
-        autoButton.textContent = "OFF";
-
-        autoButton.classList.remove("active");
-
-
-        updateVisibleDice();
-
-        updateGame();
-
-
-        historyTable.innerHTML = "";
-
-
-        statusElement.textContent =
-            "Game reset • Ready to play";
-
-    }
-);
-
-
-/* -------------------------
-   CLEAR HISTORY
-------------------------- */
-
-clearButton.addEventListener(
-    "click",
-    () => {
-
-        historyTable.innerHTML = "";
-
-        statusElement.textContent =
-            "History cleared";
-
-    }
-);
-
-
-/* -------------------------
-   INITIAL
-------------------------- */
-
-updateVisibleDice();
-
-updateGame();
+function resetGame(){
+  score=0; streak=0; lives=3; round=1; guess=null; timeLeft=30; locked=false;
+  history=[];
+  totalEl.textContent="—";
+  guessEl.textContent="—";
+  roundEl.textContent="1";
+  timerEl.textContent="30";
+  statusEl.textContent="Make your guess!";
+  messageEl.innerHTML=`<strong>How scoring works</strong><span>Correct guess: +100 points. Every 2 consecutive correct guesses adds a fixed +50 streak bonus.</span>`;
+  historyList.innerHTML="";
+  document.querySelectorAll(".num").forEach(b=>b.classList.remove("selected"));
+  [1,2,3].forEach(i=>{
+    showDie(document.getElementById(`die${i}`),1);
+    document.getElementById(`value${i}`).textContent="?";
+  });
+  rollBtn.disabled=false;
+  updateStats();
+}
+document.getElementById("resetBtn").addEventListener("click",resetGame);
+document.getElementById("clearHistory").addEventListener("click",()=>{history=[];historyList.innerHTML=""});
+rollBtn.addEventListener("click",roll);
+
+setInterval(()=>{
+  if(locked) return;
+  if(timeLeft>0){
+    timeLeft--;
+    timerEl.textContent=timeLeft;
+  }
+  if(timeLeft===0 && guess!==null){
+    roll();
+  }
+},1000);
+
+resetGame();
