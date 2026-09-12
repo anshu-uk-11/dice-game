@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>3D Dice Arena</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="game">
+
+        <!-- HEADER -->
+        <header class="header">
+
+            <div>
+                <h1>🎲 DICE ARENA</h1>
+                <p>3 Dice • 30 Second Round</p>
+            </div>
+
+            <div class="timer-box">
+                <span>NEXT ROLL</span>
+                <strong id="timer">30</strong>
+                <small>SEC</small>
+            </div>
+
+        </header>
+
+
+        <!-- DICE AREA -->
+        <section class="dice-area">
+
+            <div class="dice-row">
+
+                <!-- DICE 1 -->
+                <div class="dice-container red">
+                    <div class="dice" id="dice1">
+
+                        <div class="face front">
+                            <span class="dot center"></span>
+                        </div>
+
+                        <div class="face back">
+                            <span class="dot top-left"></span>
+                            <span class="dot bottom-right"></span>
+                        </div>
+
+                        <div class="face right">
+                            <span class="dot top-left"></span>
+                            <span class="dot center"></span>
+                            <span class="dot bottom-right"></span>
+                        </div>
+
+                        <div class="face left">
+                            <span class="dot top-left"></span>
+                            <span class="dot top-right"></span>
+                            <span class="dot bottom-left"></span>
+                            <span class="dot bottom-right"></span>
+                        </div>
+
+                        <div class="face top">
+                            <span class="dot top-left"></span>
+                            <span class="dot top-right"></span>
+                            <span class="dot bottom-left"></span>
+                            <span class="dot bottom-right"></span>
+                            <span class="dot center"></span>
+                        </div>
+
+                        <div class="face bottom">
+                            <span class="dot top-left"></span>
+                            <span class="dot center-left"></span>
+                            <span class="dot bottom-left"></span>
+                            <span class="dot top-right"></span>
+                            <span class="dot center-right"></span>
+                            <span class="dot bottom-right"></span>
+                        </div>
+
+                    </div>
+                </div>
+
+
+                <!-- DICE 2 -->
+                <div class="dice-container blue">
+                    <div class="dice" id="dice2">
+
+                        <div class="face front">
+                            <span class="dot center"></span>
+                        </div>
+
+                        <div class="face back">
+                            <span class="dot top-left"></span>
+                            <span class="dot bottom-right"></span>
+                        </div>
+
+                        <div class="face right">
+                            <span class="dot top-left"></span>
+                            <span class="dot center"></span>
+                            <span class="dot bottom-right"></span>
+                        </div>
+
+                        <div class="face left">
+                            <span class="dot top-left"></span>
+                            <span class="dot top-right"></span>
+                            <span class="dot bottom-left"></span>
+                            <span class="dot bottom-right"></span>
+                        </div>
+
+                        <div class="face top">
+                            <span class="dot top-left"></span>
+                            <span class="dot top-right"></span>
+                            <span class="dot bottom-left"></span>
+                            <span class="dot bottom-right"></span>
+                            <span class="dot center"></span>
+                        </div>
+
+                        <div class="face bottom">
+                            <span class="dot top-left"></span>
+                            <span class="dot center-left"></span>
+                            <span class="dot bottom-left"></span>
+                            <span class="dot top-right"></span>
+                            <span class="dot center-right"></span>
+                            <span class="dot bottom-right"></span>
+                        </div>
+
+                    </div>
+                </div>
+
+
+                <!-- DICE 3 -->
+                <div class="dice-container purple">
+                    <div class="dice" id="dice3">
+
+                        <div class="face front">
+                            <span class="dot center"></span>
+                        </div>
+
+                        <div class="face back">
+                            <span class="dot top-left"></span>
+                            <span class="dot bottom-right"></span>
+                        </div>
+
+                        <div class="face right">
+                            <span class="dot top-left"></span>
+                            <span class="dot center"></span>
+                            <span class="dot bottom-right"></span>
+                        </div>
+
+                        <div class="face left">
+                            <span class="dot top-left"></span>
+                            <span class="dot top-right"></span>
+                            <span class="dot bottom-left"></span>
+                            <span class="dot bottom-right"></span>
+                        </div>
+
+                        <div class="face top">
+                            <span class="dot top-left"></span>
+                            <span class="dot top-right"></span>
+                            <span class="dot bottom-left"></span>
+                            <span class="dot bottom-right"></span>
+                            <span class="dot center"></span>
+                        </div>
+
+                        <div class="face bottom">
+                            <span class="dot top-left"></span>
+                            <span class="dot center-left"></span>
+                            <span class="dot bottom-left"></span>
+                            <span class="dot top-right"></span>
+                            <span class="dot center-right"></span>
+                            <span class="dot bottom-right"></span>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+
+            <!-- TOTAL -->
+            <div class="total-box">
+                <span>TOTAL SCORE</span>
+                <strong id="total">3</strong>
+            </div>
+
+        </section>
+
+
+        <!-- INFORMATION -->
+        <section class="stats">
+
+            <div class="stat">
+                <span>SIZE</span>
+                <strong id="size">SMALL</strong>
+            </div>
+
+            <div class="stat">
+                <span>PARITY</span>
+                <strong id="parity">ODD</strong>
+            </div>
+
+            <div class="stat">
+                <span>ROUND</span>
+                <strong id="round">#1</strong>
+            </div>
+
+            <div class="stat">
+                <span>MODE</span>
+                <strong id="mode">MANUAL</strong>
+            </div>
+
+        </section>
+
+
+        <!-- BUTTONS -->
+        <section class="buttons">
+
+            <button id="rollButton" class="roll-button">
+                🎲 ROLL DICE
+            </button>
+
+            <button id="resetButton" class="reset-button">
+                ↻ RESET
+            </button>
+
+        </section>
+
+
+        <!-- AUTO MODE -->
+        <section class="auto-box">
+
+            <div>
+                <strong>🤖 Auto Roll</strong>
+                <p>Automatically roll every 30 seconds</p>
+            </div>
+
+            <button id="autoButton">
+                OFF
+            </button>
+
+        </section>
+
+
+        <!-- HISTORY -->
+        <section class="history">
+
+            <div class="history-header">
+                <h2>📊 Recent Results</h2>
+
+                <button id="clearButton">
+                    CLEAR ALL
+                </button>
+            </div>
+
+
+            <div class="table-container">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+                            <th>ROUND</th>
+                            <th>DICE 1</th>
+                            <th>DICE 2</th>
+                            <th>DICE 3</th>
+                            <th>TOTAL</th>
+                            <th>SIZE</th>
+                            <th>PARITY</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="historyTable"></tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+
+        <p class="status" id="status">
+            Ready • Tap Roll Dice to play
+        </p>
+
+    </div>
+
+
+    <script src="script.js"></script>
+
+</body>
+</html>
